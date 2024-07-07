@@ -39,3 +39,18 @@ const server = app.listen(port, () => {
 });
 
 server.keepAliveTimeout = 10 * 1000;
+
+if (!Number.isNaN(proxyPort)) {
+    const proxyApp = express();
+    const proxy = httpProxy.createProxyServer({});
+    proxyApp.all('*', (req, res) => {
+        console.log('Proxying request:', req.method, req.url);
+        req.headers.forwarded = `for=${req.ip}`;
+        proxy.web(req, res, { target: `http://localhost:${port}` }, (err) => {
+            console.log('Error while proxying request:', err);
+        });
+    });
+    proxyApp.listen(proxyPort, () => {
+        console.log(`capito API mock-proxy-server listening on port ${proxyPort}`);
+    });
+}
