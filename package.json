@@ -1,0 +1,25 @@
+{
+  "name": "capito-mock",
+  "description": "capito API mock server",
+  "version": "0.0.1",
+  "author": {
+    "name": "Markus Hofmann",
+    "email": "typo3@calien.de"
+  },
+  "license": "GPL-2.0-or-later",
+  "dependencies": {
+    "express": "^4.19.2",
+    "http-proxy": "^1.18.1",
+    "nocache": "^4.0.0",
+    "morgan": "^1.10.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "index.js"
+  ],
+  "scripts": {
+    "start": "CAPITO_MOCK_SERVER_PORT=${CAPITO_MOCK_SERVER_PORT:-3000} CAPITO_MOCK_PROXY_SERVER_PORT=${CAPITO_MOCK_PROXY_SERVER_PORT:-3001} node index.js"
+  }
+}

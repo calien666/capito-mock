@@ -1,0 +1,13 @@
+FROM node:20-alpine
+WORKDIR /app
+COPY . .
+
+RUN npm install
+ENV CAPTIO_MOCK_SERVER_PORT=3000 CAPTIO_MOCK_PROXY_SERVER_PORT=3001
+EXPOSE 3000 3001
+
+RUN chown 1000 -R /app
+
+USER 1000
+
+CMD ["npm", "start"]
