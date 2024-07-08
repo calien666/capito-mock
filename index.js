@@ -79,12 +79,12 @@ async function handleTranslate(request, response) {
         getParam(request, 'locale');
         getParam(request, 'proficiency');
     } catch (e) {
-        response.status(400).send(e.message);
+        return response.status(400).send(e.message);
     }
     const body = {
         content: "This document showcases the incredible features of capitoDigital.\nStarting with the analysis of text to look for issues concerning the text's\naccessibility; and ending with automated simplification based on machine-learning\nand sophisticated algorithms, developed in-house by our own experts in\ncomputer linguistic. Why may one ask? Because this is our goal: Help people\nunderstand!"
     }
-    response.status(200).send(body);
+    return response.status(200).send(body);
 }
 
 async function handleAnalyse(request, response) {
@@ -94,7 +94,7 @@ async function handleAnalyse(request, response) {
         getParam(request, 'locale');
         getParam(request, 'proficiency');
     } catch (e) {
-        response.status(400).send(e.message);
+        return response.status(400).send(e.message);
     }
     const body = {
         "issues": [
@@ -134,10 +134,79 @@ async function handleAnalyse(request, response) {
     return response.status(200).send(body);
 }
 
+async function handleScores(request, response) {
+    try {
+        getParam(request, 'content');
+        getParam(request, 'locale');
+    } catch (e) {
+        return response.status(400).send(e.message);
+    }
+    const body = {
+        "a1": {
+            "combined": 20
+        },
+        "a2": {
+            "combined": 59
+        },
+        "b1": {
+            "combined": 93
+        }
+    };
+
+    return response.status(200).send(body);
+}
+
+async function handleTokens(request, response) {
+    try {
+        getParam(request, 'content');
+        getParam(request, 'locale');
+    } catch (e) {
+        return response.status(400).send(e.message);
+    }
+    const body = {
+        "tokens": [
+            {
+                "locations": [
+                    {
+                        "start": 51,
+                        "length": 13
+                    }
+                ]
+            }
+        ]
+    };
+
+    return response.status(200).send(body);
+}
+
+async function handleLexicon(request, response) {
+    try {
+        getParam(request, 'content');
+        getParam(request, 'locale');
+    } catch (e) {
+        return response.status(400).send(e.message);
+    }
+    const body = {
+        "entries": [
+            {
+                "locations": [
+                    {
+                        "start": 51,
+                        "length": 13
+                    }
+                ],
+                "description": "'capito digital'' is a product of the atempo GesmbH aimed at \nhelping write understandable texts."
+            }
+        ]
+    };
+
+    return response.status(200).send(body);
+}
+
 // simplifying the oauth, we add a function faking the oauth step and just return
 // an oauth response in case all needed parameters are given
 // we don't want to test oauth here, just the capito API
-async function generateToken(request, response) {
+async function generateOauthToken(request, response) {
     try {
         const grantType = getParam(request, 'grant_type');
         if (grantType === 'password') {
@@ -164,12 +233,22 @@ async function generateToken(request, response) {
     response.status(200).send(body);
 }
 
+app.use('/v2/assistance/:account-id/scores', express.json());
+app.put('/v2/assistance/:account-id/scores', auth, handleScores);
+
+app.use('/v2/assistance/:account-id/tokens', express.json());
+app.put('/v2/assistance/:account-id/tokens', auth, handleTokens);
+
+app.use('/v2/assistance/:account-id/lexicon', express.json());
+app.put('/v2/assistance/:account-id/lexicon', auth, handleLexicon);
+
 app.use('/v2/assistance/:account-id/analysis', express.json());
 app.put('/v2/assistance/:account-id/analysis', auth, handleAnalyse);
+
 app.use('/v2/translation/:account-id', express.json());
 app.put('/v2/translation/:account-id', auth, handleTranslate);
-//app.use('/oauth/token', express.json());
-app.post('/oauth/token', generateToken);
+
+app.post('/oauth/token', generateOauthToken);
 app.all('/*', (req, res) => {
     res.status(404).send();
 });
