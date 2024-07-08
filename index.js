@@ -73,10 +73,65 @@ function getParam(request, name, options) {
 }
 
 async function handleTranslate(request, response) {
+    try {
+        // check for required params, if not, answer with Bad request
+        getParam(request, 'content');
+        getParam(request, 'locale');
+        getParam(request, 'proficiency');
+    } catch (e) {
+        response.status(400).send(e.message);
+    }
     const body = {
         content: "This document showcases the incredible features of capitoDigital.\nStarting with the analysis of text to look for issues concerning the text's\naccessibility; and ending with automated simplification based on machine-learning\nand sophisticated algorithms, developed in-house by our own experts in\ncomputer linguistic. Why may one ask? Because this is our goal: Help people\nunderstand!"
     }
     response.status(200).send(body);
+}
+
+async function handleAnalyse(request, response) {
+    try {
+        // check for required params, if not, answer with Bad request
+        getParam(request, 'content');
+        getParam(request, 'locale');
+        getParam(request, 'proficiency');
+    } catch (e) {
+        response.status(400).send(e.message);
+    }
+    const body = {
+        "issues": [
+            {
+                "id": "issue-trademark-spelling-summary",
+                "metadata": {
+                    "category": "vocabulary",
+                    "severity": "warning"
+                },
+                "locations": [
+                    {
+                        "start": 51,
+                        "length": 13
+                    }
+                ],
+                "suggestions": [
+                    {
+                        "transformations": [
+                            {
+                                "location": {
+                                    "start": 51,
+                                    "length": 13
+                                },
+                                "content": "capito digital"
+                            }
+                        ],
+                        "confidence": "low",
+                        "recommended_actions": [
+                            "apply-transformations"
+                        ],
+                        "description": "Incorrect spelling of trademark."
+                    }
+                ]
+            }
+        ]
+    };
+    return response.status(200).send(body);
 }
 
 // simplifying the oauth, we add a function faking the oauth step and just return
@@ -85,11 +140,17 @@ async function handleTranslate(request, response) {
 async function generateToken(request, response) {
     try {
         const grantType = getParam(request, 'grant_type');
-        const username = getParam(request, 'username');
-        const password = getParam(request, 'password');
-        const audience = getParam(request, 'audience');
-        const clientId = getParam(request, 'client_id');
-        const clientSecret = getParam(request, 'client_secret');
+        if (grantType === 'password') {
+            getParam(request, 'username');
+            getParam(request, 'password');
+            getParam(request, 'audience');
+            getParam(request, 'client_secret');
+        } else if (grantType === 'refresh_token') {
+            getParam(request, 'client_id');
+            getParam(request, 'refresh_token');
+        } else {
+            response.status(406).send('Not acceptable');
+        }
     } catch (e) {
         response.status(401).send(e.message);
     }
@@ -103,6 +164,8 @@ async function generateToken(request, response) {
     response.status(200).send(body);
 }
 
+app.use('/v2/assistance/:account-id/analysis', express.json());
+app.put('/v2/assistance/:account-id/analysis', auth, handleAnalyse);
 app.use('/v2/translation/:account-id', express.json());
 app.put('/v2/translation/:account-id', auth, handleTranslate);
 //app.use('/oauth/token', express.json());
